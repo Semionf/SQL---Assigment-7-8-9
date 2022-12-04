@@ -1,0 +1,148 @@
+-------------------7.1
+select *,
+case
+	when SUBSTRING(Country,1,15) like 'A%' then 'AAA'
+	when SUBSTRING(Country,1,15) like 'B%' then 'BBB'
+	when SUBSTRING(Country,1,15) like 'C%' then 'CCC'
+end as COUNTRY_NICK
+from Customers
+
+--------------------7.2
+
+select *,
+case
+	when UnitPrice < 5 then 'CHEAP'
+	when UnitPrice between 5 and 10 then 'MEDIUM'
+	when UnitPrice between 100 and 150 then 'EXPENSIVE'
+	ELSE
+	'NORMAL'
+	END AS PriceDescription
+	from Products
+
+
+-----------------8.2
+
+select CustomerID from Orders
+where OrderID in (select OrderID from [Order Details]
+where UnitPrice = 14)
+
+-----------------8.3
+
+select ContactName, FirstName from Employees, Customers
+where Employees.City like Customers.City
+and (Employees.City like 'Los Angeles' or Employees.City like 'New York'
+or Employees.City like 'Seattle')
+
+
+-----------------8.4
+
+select Products.* from Products, Suppliers
+where Suppliers.SupplierID 
+in ( select SupplierID from Products) and  Products.UnitPrice > 30
+and (Suppliers.Country like 'USA' or Suppliers.Country like 'UK')
+
+-----------------8.6
+
+alter procedure productsInOrder
+@var1 int
+as
+begin
+	select * from Products 
+	where Products.ProductID in (select ProductID from [Order Details]
+	inner join Orders on Orders.OrderID = [Order Details].OrderID and Orders.OrderID = @var1)
+end
+
+exec productsInOrder @var1 = 10248
+
+
+------------------8.7 
+
+create procedure orderIDS 
+
+@var1 int
+
+as
+
+begin
+select OrderID from [Order Details] OD 
+where OD.ProductID in (select ProductID from Products P where P.ProductID = @var1)
+end
+
+exec orderIDS @var1 = 1
+
+--------------8.8
+
+create procedure productsWithFloat
+@var1 float
+as
+
+begin
+select [ProductName] from Products
+where UnitPrice = @var1
+end
+
+exec productsWithFloat @var1 = 21.35
+
+------------------8.9
+
+alter procedure ordersByShipperID
+@var1 int
+as
+
+begin
+
+select * from Orders O where ShipVia = @var1
+
+end
+
+exec ordersByShipperID @var1 = 1
+
+-----------------9.1
+
+select max(UnitPrice) from Products
+
+-----------------9.2
+
+select avg(UnitPrice) from Products
+
+-----------------9.3
+
+select min(UnitPrice) from Products
+
+------------------9.4
+
+select ProductName from Products where UnitPrice = (select max(UnitPrice) from Products)
+
+-------------------9.5
+
+select ProductName from Products where UnitPrice = (select min(UnitPrice) from Products)
+
+------------------9.6
+
+create procedure NumberOfOrders
+
+@var1 nvarchar(15)
+
+as
+	
+begin
+	select count(OrderID) from Orders 
+	where ShipCountry = @var1
+end
+
+exec NumberOfOrders @var1 = 'France'
+
+------------------9.7
+
+alter procedure NumberOfProducts
+
+@var1 nvarchar(40)
+
+as
+	
+begin
+	select count(OD.ProductID) from [Order Details] OD 
+	where OD.OrderID in (select D.OrderID from Orders D where D.ShipCountry = @var1)
+end
+
+exec NumberOfProducts @var1 = 'France'
